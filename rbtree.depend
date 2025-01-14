@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1736878227 source:d:\ads\rbtree\main.cpp
+	<iostream>
+	<queue>
+	<iomanip>
+
