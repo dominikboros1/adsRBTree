@@ -1,6 +1,7 @@
 # depslib dependency file v1.0
-1736878227 source:d:\ads\rbtree\main.cpp
+1736892735 source:d:\ads\rbtree\main.cpp
 	<iostream>
+	<fstream>
 	<queue>
 	<iomanip>
 

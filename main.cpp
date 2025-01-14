@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <queue>
 #include <iomanip>
 
@@ -75,7 +76,6 @@ private:
                     uncle->color = BLACK;
                     node = grandparent;
                 } else {
-
                     if (node == parent->right) {
                         rotateLeft(root, parent);
                         node = parent;
@@ -86,9 +86,7 @@ private:
                     std::swap(parent->color, grandparent->color);
                     node = parent;
                 }
-            }
-
-            else {
+            } else {
                 Node* uncle = grandparent->left;
 
                 if (uncle && uncle->color == RED) {
@@ -97,7 +95,6 @@ private:
                     uncle->color = BLACK;
                     node = grandparent;
                 } else {
-
                     if (node == parent->left) {
                         rotateRight(root, parent);
                         node = parent;
@@ -113,20 +110,56 @@ private:
         root->color = BLACK;
     }
 
-    void visualizeTree(Node* root, int space = 0, int height = 10) const {
+    void visualizeTree(Node* root, int space, int height, std::ostream& out) const {
         if (!root)
             return;
 
         space += height;
 
-        visualizeTree(root->right, space);
+        visualizeTree(root->right, space, height, out);
 
-        std::cout << std::endl;
         for (int i = height; i < space; ++i)
-            std::cout << " ";
-        std::cout << root->data << (root->color == RED ? "R" : "B") << "\n";
+            out << " ";
+        out << root->data << (root->color == RED ? "R" : "B") << "\n";
 
-        visualizeTree(root->left, space);
+        visualizeTree(root->left, space, height, out);
+    }
+
+    Node* deleteBST(Node* root, int data) {
+        if (!root)
+            return root;
+
+        if (data < root->data) {
+            root->left = deleteBST(root->left, data);
+        } else if (data > root->data) {
+            root->right = deleteBST(root->right, data);
+        } else {
+            if (!root->left || !root->right) {
+                Node* temp = root->left ? root->left : root->right;
+
+                if (!temp) {
+                    temp = root;
+                    root = nullptr;
+                } else {
+                    *root = *temp;
+                }
+
+                delete temp;
+            } else {
+                Node* temp = minValueNode(root->right);
+                root->data = temp->data;
+                root->right = deleteBST(root->right, temp->data);
+            }
+        }
+
+        return root;
+    }
+
+    Node* minValueNode(Node* node) {
+        Node* current = node;
+        while (current && current->left)
+            current = current->left;
+        return current;
     }
 
 public:
@@ -153,31 +186,79 @@ public:
         return root;
     }
 
+    void deleteNode(int data) {
+        root = deleteBST(root, data);
+    }
+
     void display() const {
         if (root)
-            visualizeTree(root);
+            visualizeTree(root, 0, 10, std::cout);
         else
             std::cout << "Tree is empty.\n";
+    }
+
+    void saveToFile(const std::string& filename) const {
+        std::ofstream file(filename);
+        if (file.is_open()) {
+            if (root)
+                visualizeTree(root, 0, 10, file);
+            else
+                file << "Tree is empty.\n";
+            file.close();
+            std::cout << "Tree saved to " << filename << "\n";
+        } else {
+            std::cout << "Error: Unable to open file.\n";
+        }
     }
 };
 
 int main() {
     RBTree tree;
+    int choice;
 
-    int n;
-    std::cout << "Enter the number of nodes you want to add: ";
-    std::cin >> n;
+    do {
+        std::cout << "\nMenu:\n"
+                  << "1. Insert Node\n"
+                  << "2. Delete Node\n"
+                  << "3. Display Tree\n"
+                  << "4. Save Tree to File\n"
+                  << "5. Exit\n"
+                  << "Enter your choice: ";
+        std::cin >> choice;
 
-    std::cout << "Enter the node values:\n";
-    for (int i = 0; i < n; ++i) {
-        int value;
-        std::cout << "Node " << (i + 1) << ": ";
-        std::cin >> value;
-        tree.insert(value);
-    }
-
-    std::cout << "\nRed-Black Tree Visualization:\n";
-    tree.display();
+        switch (choice) {
+            case 1: {
+                int value;
+                std::cout << "Enter value to insert: ";
+                std::cin >> value;
+                tree.insert(value);
+                break;
+            }
+            case 2: {
+                int value;
+                std::cout << "Enter value to delete: ";
+                std::cin >> value;
+                tree.deleteNode(value);
+                break;
+            }
+            case 3:
+                std::cout << "\nTree Visualization:\n";
+                tree.display();
+                break;
+            case 4: {
+                std::string filename;
+                std::cout << "Enter filename to save: ";
+                std::cin >> filename;
+                tree.saveToFile(filename);
+                break;
+            }
+            case 5:
+                std::cout << "Exiting Program\n";
+                break;
+            default:
+                std::cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 5);
 
     return 0;
 }
